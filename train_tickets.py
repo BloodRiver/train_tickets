@@ -431,7 +431,7 @@ def edit_train_data(name: str) -> bool:
                     if (time_in_seconds(arrival_time)
                             > time_in_seconds(departure_time)):
                         print("Error. Departure time must not be earlier than",
-                            "arrival time.")
+                              "arrival time.")
                         print()
                     elif departure_time != arrival_time:
                         all_trains[choice][NUM_COACH] = coaches
@@ -440,7 +440,9 @@ def edit_train_data(name: str) -> bool:
                         all_trains[choice][TIME_ARRI] = arrival_time
                         all_trains[choice][TIME_DEPA] = departure_time
                         write_to_csv('trains.csv', all_trains)
-                        break
+
+                        print("Editing complete.")
+                        return True
                     else:
                         print("Error. Departure time must not be the same as",
                               "arrival time.")
@@ -473,6 +475,10 @@ def delete_train_data(name: str) -> bool:
 
         if 1 <= choice <= num_trains:
             all_trains.pop(choice)
+
+            for x in range(1, len(all_trains)):
+                all_trains[x][TRAIN_NUM] = x
+
             write_to_csv('trains.csv', all_trains)
             print("Selected train has been removed from the database.")
             return True
@@ -550,4 +556,6 @@ if __name__ == "__main__":
     # print(time_in_seconds("05:05"))  is working
     # print(time_in_seconds("05:04"))
 
-    # delete_train_data("Sajeed")  is working
+    # delete_train_data("Sajeed") is working
+
+    # edit_train_data("Sajeed")
