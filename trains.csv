@@ -1,11 +1,8 @@
 Train Number,Number of Coaches,Number of Seats per coach,Weekday,Train Arrival Time,Train Departure Time
 1,6,80,Monday,10:00,11:00
 2,5,50,Monday,04:03,04:04
-3,5,80,monday,04:03,04:04
 4,5,50,Monday,04:04,04:05
 5,6,60,Monday,04:06,04:07
 6,5,50,Monday,05:05,05:04
 7,5,50,Sunday,05:05,05:04
 8,5,50,Wednesday,05:05,05:04
-9,5,50,Tuesday,05:04,05:03
-10,5,50,Friday,05:04,05:07

@@ -13,6 +13,9 @@ WEEK_DAYN = 3
 TIME_ARRI = 4
 TIME_DEPA = 5
 
+WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "friday",
+            "saturday"]
+
 
 # Admin name is Sajeed and password is admin@123
 
@@ -243,44 +246,155 @@ def add_train_data(name: str) -> bool:
     Checks to make sure no duplicate entries are being made.
     Also checks to make sure time inputs are corrects.
     '''
-    WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "friday",
-                "saturday"]
 
     view_train_data(name)
     all_trains = get_data_from_csv('trains.csv')
     num_trains = len(all_trains)
     print("New train number:", num_trains)
 
-    coaches = int_input("How many coaches in the new train? "
-                        "(type -1 to cancel): ")
+    while True:
+        coaches = int_input("How many coaches in the new train? "
+                            "(type -1 to cancel): ")
 
-    if coaches == -1:
-        return True
-    else:
+        if coaches == -1:
+            return True
+        elif coaches < 1:
+            print("Invalid input. There must be at least 1 coach"
+                  " in each train.")
+        else:
+            break
+
+    while True:
         seats_per_coach = int_input("How many seats in each coach? "
                                     "(type -1 to cancel): ")
 
         if seats_per_coach == -1:
             return True
 
+        elif seats_per_coach < 10:
+            print("Error. there must be at least 10 seats in the coach")
         else:
+            break
+
+    while True:
+        weekday = input("What day of the week is this train "
+                        "available?: ")
+
+        weekday = weekday.capitalize()
+
+        if weekday == "-1":
+            return True
+        elif weekday.lower() not in WEEKDAYS:
+            print("Invalid input. Please enter a day between",
+                  "Sunday to Saturday")
+            print()
+        else:
+            break
+
+    while True:
+        arrival_time = time_input("Please enter time of arrival in"
+                                  "  24-hour clock (HH:MM) format: ")
+
+        if arrival_time == "-1":
+            return True
+
+        for row in all_trains:
+            _weekday = row[WEEK_DAYN].lower()
+            _time = row[TIME_ARRI]
+            if arrival_time == _time and weekday.lower() == _weekday:
+                print(f"Error. Duplicate arrival time on {weekday}")
+                print()
+                break
+        else:
+            break
+
+    while True:
+        departure_time = time_input("Please enter time of departure in"
+                                    " 24-hour clock (HH:MM) format: ")
+
+        if departure_time == "-1":
+            return True
+
+        for row in all_trains:
+            _weekday = row[WEEK_DAYN].lower()
+            _time = row[TIME_DEPA]
+            if departure_time == _time and weekday.lower() == _weekday:
+                print(f"Error. Duplicate departure time on {weekday}")
+                print()
+                break
+        else:
+            if (time_in_seconds(arrival_time)
+                    > time_in_seconds(departure_time)):
+                print("Error. Departure time must not be earlier than",
+                      "arrival time.")
+                print()
+            elif departure_time != arrival_time:
+                all_trains.append(
+                    [num_trains,
+                        coaches,
+                        seats_per_coach,
+                        weekday,
+                        arrival_time,
+                        departure_time])
+                write_to_csv('trains.csv', all_trains)
+                break
+            else:
+                print("Error. Departure time must not be the same as",
+                      "arrival time.")
+                print()
+
+    return True
+
+
+def edit_train_data(name: str) -> bool:
+    all_trains = get_data_from_csv('trains.csv')
+
+    view_train_data(name)
+    while True:
+        choice = int_input("Which train do you wish to edit?"
+                           " (type -1 to cancel editing): ")
+
+        if choice == -1:
+            break
+
+        if 1 <= choice <= len(all_trains):
             while True:
-                weekday = input("What day of the week is this train "
-                                "available?: ")
+                coaches = int_input("How many coaches? (type -1 to cancel"
+                                    " editing): ")
 
-                weekday = weekday.capitalize()
-
-                if weekday.lower() not in WEEKDAYS:
-                    print("Invalid input. Please enter a day between",
-                          "Sunday to Saturday")
-                    print()
-                elif weekday == "-1":
-                    break
+                if coaches == -1:
+                    return True
+                elif coaches < 1:
+                    print("Error. There must be at least 1 coach.")
                 else:
                     break
 
-            if weekday == "-1":
-                return True
+            while True:
+                num_seats = int_input("How many seats in the coach? (type -1"
+                                      " to cancel editing): ")
+
+                if num_seats == -1:
+                    return True
+                elif num_seats < 10:
+                    print("Error. There must be at least 10 seats in each",
+                          "coach.")
+                else:
+                    break
+
+            while True:
+                weekday = input("What day of the week is this train"
+                                " available?: ")
+
+                weekday = weekday.capitalize()
+
+                if weekday == "-1":
+                    return True
+                elif weekday.lower() not in WEEKDAYS:
+                    print("Invalid input. Please enter a day between",
+                          "Sunday to Saturday")
+                    print()
+                else:
+                    break
 
             while True:
                 arrival_time = time_input("Please enter time of arrival in"
@@ -317,16 +431,14 @@ def add_train_data(name: str) -> bool:
                     if (time_in_seconds(arrival_time)
                             > time_in_seconds(departure_time)):
                         print("Error. Departure time must not be earlier than",
-                              "arrival time.")
+                            "arrival time.")
                         print()
                     elif departure_time != arrival_time:
-                        all_trains.append(
-                            [num_trains,
-                             coaches,
-                             seats_per_coach,
-                             weekday,
-                             arrival_time,
-                             departure_time])
+                        all_trains[choice][NUM_COACH] = coaches
+                        all_trains[choice][NUM_SEATS] = num_seats
+                        all_trains[choice][WEEK_DAYN] = weekday
+                        all_trains[choice][TIME_ARRI] = arrival_time
+                        all_trains[choice][TIME_DEPA] = departure_time
                         write_to_csv('trains.csv', all_trains)
                         break
                     else:
@@ -334,11 +446,49 @@ def add_train_data(name: str) -> bool:
                               "arrival time.")
                         print()
 
+        else:
+            view_train_data(name)
+            print("Invalid choice. Please choose from the numbers shown.")
     return True
 
 
-def testFunc(name: str) -> None:
-    print("It works!")
+def delete_train_data(name: str) -> bool:
+    '''
+    Allows an admin to delete train data from the csv database
+    '''
+
+    all_trains = get_data_from_csv('trains.csv')
+    num_trains = len(all_trains)
+
+    view_train_data(name)
+
+    while True:
+
+        choice = int_input("Which train do you wish to remove "
+                           "from the database? "
+                           "(type -1 to cancel): ")
+
+        if choice == -1:
+            return True
+
+        if 1 <= choice <= num_trains:
+            all_trains.pop(choice)
+            write_to_csv('trains.csv', all_trains)
+            print("Selected train has been removed from the database.")
+            return True
+        else:
+            view_train_data(name)
+            print()
+            print("Invalid input.",
+                  "Please choose a number from the numbers shown.")
+
+
+def logout(name: str) -> bool:
+    '''
+    Nothing special. Simply logs user out and closes the program
+    '''
+
+    return False
 
 
 def main() -> None:
@@ -350,7 +500,7 @@ def main() -> None:
         if choice == 1:
             name, loggedIn, admin = login()
         elif choice == 2:
-            pass
+            raise SystemExit("Not built yet bro")
         elif choice == 3:
             break
         else:
@@ -358,12 +508,17 @@ def main() -> None:
 
     admin_functions = [
         view_train_data,
-        testFunc
+        add_train_data,
+        edit_train_data,
+        delete_train_data,
+        logout
     ]
 
     functions = [
         view_train_data,
-        testFunc
+        # purchase_tickets,
+        # cancel_booking,
+        logout
     ]
 
     while loggedIn:
@@ -373,9 +528,11 @@ def main() -> None:
             loggedIn = False
         else:
             if admin is True:
-                loggedIn = admin_functions[choice - 1](name)
+                if 1 <= choice <= len(admin_functions):
+                    loggedIn = admin_functions[choice - 1](name)
             else:
-                loggedIn = functions[choice - 1](name)
+                if 1 <= choice <= len(functions):
+                    loggedIn = functions[choice - 1](name)
 
     print("Program closed. Thank you for using my app.")
 
@@ -388,7 +545,9 @@ if __name__ == "__main__":
     # get_data_from_csv(filename) is working
     # write_to_csv(filename) is working
 
-    add_train_data("Sajeed")
+    # add_train_data("Sajeed")
 
     # print(time_in_seconds("05:05"))  is working
     # print(time_in_seconds("05:04"))
+
+    # delete_train_data("Sajeed")  is working
