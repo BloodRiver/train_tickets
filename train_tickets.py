@@ -40,6 +40,9 @@ def create_database_files_if_non_existent() -> None:
         'users.csv': [
             ['Username', 'Password', 'Admin']
         ],
+        'tickets.csv': [
+            ['Username', "Train Number"]
+        ]
     }
 
     for filename in database_files:
@@ -67,10 +70,11 @@ def get_data_from_csv(filename: str) -> list:
 
         for row in csv_reader:
             if len(row):
-                if row[ADMN] == 'True':
-                    row[ADMN] = True
-                elif row[ADMN] == "False":
-                    row[ADMN] = False
+                if len(row) - 1 >= ADMN:
+                    if row[ADMN] == 'True':
+                        row[ADMN] = True
+                    elif row[ADMN] == "False":
+                        row[ADMN] = False
                 data.append(row)
 
     return data
@@ -489,6 +493,73 @@ def delete_train_data(name: str) -> bool:
                   "Please choose a number from the numbers shown.")
 
 
+def purchase_tickets(name: str) -> bool:
+    '''
+    Creates an entry in tickets.csv with username `name` and train number
+    chosen by user
+    '''
+
+    all_trains = get_data_from_csv("trains.csv")
+    while True:
+        view_train_data(name)
+        while True:
+            choice = int_input("Which train do you wish to book?: ")
+
+            if choice == -1:
+                return True
+            elif 1 <= choice <= len(all_trains):
+                break
+            else:
+                view_train_data(name)
+                print("Invalid choice. Please choose from the numbers shown.")
+
+        print("You have chosen:")
+        print(f"Train number: {choice} that arrives on",
+              f"{all_trains[choice][WEEK_DAYN]} at",
+              f"{all_trains[choice][TIME_ARRI]}", "and leaves at",
+              f"{all_trains[choice][TIME_DEPA]}")
+
+        confirm = input("Are you sure you wish to purchase this ticket?"
+                        " (y/n): ")
+        confirm = confirm.lower()
+
+        if confirm == "y":
+            if 'tickets.csv' in os.listdir("."):
+                data = [[name, choice]]
+                tickets = open("tickets.csv", "a")
+            else:
+                data = [
+                    ["Username", "Train Number"],
+                    [name, choice]
+                ]
+                tickets = open("tickets.csv", "w")
+
+            writer = csv.writer(tickets)
+            writer.writerows(data)
+
+            tickets.close()
+            break
+
+    return True
+
+
+def cancel_booking(name: str) -> bool:
+    '''
+    Remove entry from tickets.csv
+    '''
+    all_tickets = get_data_from_csv('tickets.csv')
+
+    for row in all_tickets:
+        if name in row:
+            all_tickets.pop(all_tickets.index(row))
+            write_to_csv('tickets.csv', all_tickets)
+            print("Your train ticket booking has been cancelled.")
+            break
+    else:
+        print("You have not purchased any tickets.")
+    return True
+
+
 def logout(name: str) -> bool:
     '''
     Nothing special. Simply logs user out and closes the program
@@ -522,8 +593,8 @@ def main() -> None:
 
     functions = [
         view_train_data,
-        # purchase_tickets,
-        # cancel_booking,
+        purchase_tickets,
+        cancel_booking,
         logout
     ]
 
@@ -545,17 +616,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     create_database_files_if_non_existent()
-    # main()
-    # show_menu(False) is working
-    # view_train_data("Sajeed") is working
-    # get_data_from_csv(filename) is working
-    # write_to_csv(filename) is working
-
-    # add_train_data("Sajeed")
-
-    # print(time_in_seconds("05:05"))  is working
-    # print(time_in_seconds("05:04"))
-
-    # delete_train_data("Sajeed") is working
-
-    # edit_train_data("Sajeed")
+    main()
