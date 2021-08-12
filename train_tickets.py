@@ -569,15 +569,31 @@ def logout(name: str) -> bool:
 
 
 def main() -> None:
-
+    loggedIn = False
     while True:
         print("1. Login\n2. Register\n3. Exit")
         choice = int_input("Choose an option: ")
 
         if choice == 1:
             name, loggedIn, admin = login()
+            break
         elif choice == 2:
-            raise SystemExit("Not built yet bro")
+            name = input("Please enter your name: ")
+            password = input("Enter a password: ")
+            confirm = input("Enter the same passwrod again: ")
+
+            if confirm != password:
+                print("Passwords do not match. Please try again.")
+            else:
+                password = hashlib.sha256(password.encode()).hexdigest()
+
+                data = [
+                    [name, password, False]
+                ]
+
+                with open("users.csv", "a") as users:
+                    writer = csv.writer(users)
+                    writer.writerows(data)
         elif choice == 3:
             break
         else:
