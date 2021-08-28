@@ -22,8 +22,9 @@ WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "friday",
 
 def create_database_files_if_non_existent() -> None:
     '''
-    As the name of the function suggests, this function creates the database
-    files if they do not exist in the same directory as this program.
+    This function creates the database files if they do not exist in
+    the same directory as this program. This helps initialize the
+    database files and avoid errors.
     '''
 
     dirs = os.listdir('.')
@@ -113,6 +114,7 @@ def login() -> tuple:
                 break
             else:
                 print("Incorrect password.")
+                break
     else:
         print("Username does not exist in database.")
 
@@ -464,7 +466,7 @@ def delete_train_data(name: str) -> bool:
     '''
 
     all_trains = get_data_from_csv('trains.csv')
-    num_trains = len(all_trains)
+    num_trains = len(all_trains) - 1
 
     view_train_data(name)
 
@@ -548,13 +550,46 @@ def cancel_booking(name: str) -> bool:
     Remove entry from tickets.csv
     '''
     all_tickets = get_data_from_csv('tickets.csv')
+    all_trains = get_data_from_csv('trains.csv')
+    current_user_tickets = []
 
     for row in all_tickets:
         if name in row:
-            all_tickets.pop(all_tickets.index(row))
+            current_row = row.copy()
+            for x, train in enumerate(all_trains):
+                current_train = train.copy()
+                if all_trains[x][0] == row[1]:
+                    current_train.pop(0)
+                    current_train.pop(0)
+                    current_train.pop(0)
+                    current_row.extend(current_train)
+            current_user_tickets.append(current_row)
+
+    if len(current_user_tickets):
+        print("_" * 187)
+        headers = ["No.", "Username", "Train Number", "Day", "Arrival Time",
+                   "Departure Time"]
+        print((len(headers) * "|{:^30}").format(*headers), end="|\n")
+        print("_" * 187)
+        for x, eachTicket in enumerate(current_user_tickets):
+            print(("|{:^30}".format(x + 1)
+                   + (((len(eachTicket)) * "|{:^30}").format(*eachTicket))),
+                  end='|\n')
+            print("_" * 187)
+
+        cancel_choice = int_input("Which ticket booking do you wish to cancel"
+                                  "? (type -1 to exit): ")
+
+        if cancel_choice == -1:
+            return True
+        elif 1 <= cancel_choice <= len(current_user_tickets):
+            cancel_choice -= 1
+            all_tickets.pop(
+                all_tickets.index(
+                    current_user_tickets[cancel_choice][:2]
+                ))
             write_to_csv('tickets.csv', all_tickets)
             print("Your train ticket booking has been cancelled.")
-            break
     else:
         print("You have not purchased any tickets.")
     return True
@@ -570,17 +605,16 @@ def logout(name: str) -> bool:
 
 def main() -> None:
     loggedIn = False
-    while True:
+    while loggedIn is False:
         print("1. Login\n2. Register\n3. Exit")
         choice = int_input("Choose an option: ")
 
         if choice == 1:
             name, loggedIn, admin = login()
-            break
         elif choice == 2:
             name = input("Please enter your name: ")
             password = input("Enter a password: ")
-            confirm = input("Enter the same passwrod again: ")
+            confirm = input("Enter the same password again: ")
 
             if confirm != password:
                 print("Passwords do not match. Please try again.")
