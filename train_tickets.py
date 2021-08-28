@@ -110,7 +110,9 @@ def login() -> tuple:
                 loggedIn = True
                 if user[ADMN]:
                     admin = True
-                print("Welcome admin!")
+                    print(f"Welcome admin {name}!")
+                else:
+                    print(f"Welcome {name}!")
                 break
             else:
                 print("Incorrect password.")
@@ -196,24 +198,26 @@ def time_in_seconds(time: str) -> int:
     return ((hours * 3600) + (minutes * 60))
 
 
-def show_menu(admin: bool) -> int:
+def show_menu(user: dict) -> int:
     '''
     Displays a menu to the user depending whether or not they are an admin
     '''
-    if admin is True:
+    if user['admin'] is True:
         menu_options = [
             "1. View train data",
             "2. Add train data",
             "3. Edit train data",
             "4. Delete train data",
-            "5. Logout"
+            "5. View ticket bookings",
+            "6. Logout"
         ]
     else:
         menu_options = [
             "1. View available trains",
             "2. Purchase tickets",
-            "3. Cancel booking",
-            "4. Logout"
+            "3. View ticket bookings",
+            "4. Cancel booking",
+            "5. Logout"
         ]
 
     while True:
@@ -227,7 +231,7 @@ def show_menu(admin: bool) -> int:
     return -1
 
 
-def view_train_data(name: str) -> bool:
+def view_train_data(user: dict) -> bool:
     '''
     Fetches records from trains.csv and displays it to the current user.
     '''
@@ -246,14 +250,14 @@ def view_train_data(name: str) -> bool:
     return True
 
 
-def add_train_data(name: str) -> bool:
+def add_train_data(user: dict) -> bool:
     '''
     Add a new train data to the trains.csv database.
     Checks to make sure no duplicate entries are being made.
     Also checks to make sure time inputs are corrects.
     '''
 
-    view_train_data(name)
+    view_train_data(user['name'])
     all_trains = get_data_from_csv('trains.csv')
     num_trains = len(all_trains)
     print("New train number:", num_trains)
@@ -352,10 +356,10 @@ def add_train_data(name: str) -> bool:
     return True
 
 
-def edit_train_data(name: str) -> bool:
+def edit_train_data(user: dict) -> bool:
     all_trains = get_data_from_csv('trains.csv')
 
-    view_train_data(name)
+    view_train_data(user['name'])
     while True:
         choice = int_input("Which train do you wish to edit?"
                            " (type -1 to cancel editing): ")
@@ -455,12 +459,12 @@ def edit_train_data(name: str) -> bool:
                         print()
 
         else:
-            view_train_data(name)
+            view_train_data(user['name'])
             print("Invalid choice. Please choose from the numbers shown.")
     return True
 
 
-def delete_train_data(name: str) -> bool:
+def delete_train_data(user: dict) -> bool:
     '''
     Allows an admin to delete train data from the csv database
     '''
@@ -468,7 +472,7 @@ def delete_train_data(name: str) -> bool:
     all_trains = get_data_from_csv('trains.csv')
     num_trains = len(all_trains) - 1
 
-    view_train_data(name)
+    view_train_data(user['name'])
 
     while True:
 
@@ -489,13 +493,13 @@ def delete_train_data(name: str) -> bool:
             print("Selected train has been removed from the database.")
             return True
         else:
-            view_train_data(name)
+            view_train_data(user['name'])
             print()
             print("Invalid input.",
                   "Please choose a number from the numbers shown.")
 
 
-def purchase_tickets(name: str) -> bool:
+def purchase_tickets(user: dict) -> bool:
     '''
     Creates an entry in tickets.csv with username `name` and train number
     chosen by user
@@ -503,7 +507,7 @@ def purchase_tickets(name: str) -> bool:
 
     all_trains = get_data_from_csv("trains.csv")
     while True:
-        view_train_data(name)
+        view_train_data(user['name'])
         while True:
             choice = int_input("Which train do you wish to book?: ")
 
@@ -512,7 +516,7 @@ def purchase_tickets(name: str) -> bool:
             elif 1 <= choice <= len(all_trains):
                 break
             else:
-                view_train_data(name)
+                view_train_data(user['name'])
                 print("Invalid choice. Please choose from the numbers shown.")
 
         print("You have chosen:")
@@ -527,12 +531,12 @@ def purchase_tickets(name: str) -> bool:
 
         if confirm == "y":
             if 'tickets.csv' in os.listdir("."):
-                data = [[name, choice]]
+                data = [[user['name'], choice]]
                 tickets = open("tickets.csv", "a")
             else:
                 data = [
                     ["Username", "Train Number"],
-                    [name, choice]
+                    [user['name'], choice]
                 ]
                 tickets = open("tickets.csv", "w")
 
@@ -545,37 +549,65 @@ def purchase_tickets(name: str) -> bool:
     return True
 
 
-def cancel_booking(name: str) -> bool:
+def get_ticket_data(name: str = '') -> list:
     '''
-    Remove entry from tickets.csv
+    Fetch all ticket data from database
     '''
+
     all_tickets = get_data_from_csv('tickets.csv')
     all_trains = get_data_from_csv('trains.csv')
-    current_user_tickets = []
+    user_tickets = [['Username', 'Train Number', 'Weekday',
+                     'Train Arrival Time', 'Train Departure Time']]
 
-    for row in all_tickets:
-        if name in row:
-            current_row = row.copy()
-            for x, train in enumerate(all_trains):
+    for row in all_tickets[1:]:
+        current_row = row.copy()
+
+        for train in all_trains[1:]:
+            if train[0] == current_row[1]:
                 current_train = train.copy()
-                if all_trains[x][0] == row[1]:
-                    current_train.pop(0)
-                    current_train.pop(0)
-                    current_train.pop(0)
-                    current_row.extend(current_train)
-            current_user_tickets.append(current_row)
+                current_train.pop(0)
+                current_train.pop(0)
+                current_train.pop(0)
+                current_row.extend(current_train)
 
-    if len(current_user_tickets):
+                if name == '' or current_row[0] == name:
+                    user_tickets.append(current_row)
+
+    return user_tickets
+
+
+def view_ticket_bookings(user: dict) -> bool:
+
+    if user['admin']:
+        all_tickets = get_ticket_data()
+    else:
+        all_tickets = get_ticket_data(user['name'])
+
+    if len(all_tickets):
         print("_" * 187)
-        headers = ["No.", "Username", "Train Number", "Day", "Arrival Time",
-                   "Departure Time"]
+        headers = ["No."] + all_tickets[0]
         print((len(headers) * "|{:^30}").format(*headers), end="|\n")
         print("_" * 187)
-        for x, eachTicket in enumerate(current_user_tickets):
+        for x, eachTicket in enumerate(all_tickets[1:]):
             print(("|{:^30}".format(x + 1)
                    + (((len(eachTicket)) * "|{:^30}").format(*eachTicket))),
                   end='|\n')
             print("_" * 187)
+    else:
+        print("You have not purchased any tickets.")
+
+    return True
+
+
+def cancel_booking(user: dict) -> bool:
+    '''
+    Remove entry from tickets.csv
+    '''
+    view_ticket_bookings(user)
+    all_tickets = get_data_from_csv('tickets.csv')
+    current_user_tickets = get_ticket_data(user['name'])
+
+    if len(all_tickets):
 
         cancel_choice = int_input("Which ticket booking do you wish to cancel"
                                   "? (type -1 to exit): ")
@@ -611,6 +643,7 @@ def main() -> None:
 
         if choice == 1:
             name, loggedIn, admin = login()
+            user = {'name': name, 'admin': admin}
         elif choice == 2:
             name = input("Please enter your name: ")
             password = input("Enter a password: ")
@@ -638,28 +671,30 @@ def main() -> None:
         add_train_data,
         edit_train_data,
         delete_train_data,
+        view_ticket_bookings,
         logout
     ]
 
     functions = [
         view_train_data,
         purchase_tickets,
+        view_ticket_bookings,
         cancel_booking,
         logout
     ]
 
     while loggedIn:
-        choice = show_menu(admin)
+        choice = show_menu(user)
 
         if choice == -1:
             loggedIn = False
         else:
             if admin is True:
                 if 1 <= choice <= len(admin_functions):
-                    loggedIn = admin_functions[choice - 1](name)
+                    loggedIn = admin_functions[choice - 1](user)
             else:
                 if 1 <= choice <= len(functions):
-                    loggedIn = functions[choice - 1](name)
+                    loggedIn = functions[choice - 1](user)
 
     print("Program closed. Thank you for using my app.")
 
