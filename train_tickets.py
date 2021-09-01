@@ -1122,6 +1122,9 @@ def main() -> None:
     The main procedure that links all the above functions to make this whole
     program work
     '''
+
+    print("Welcome to Train Ticket Booking System by Sajeed Ahmed Galib Arnob")
+    print()
     loggedIn = False
 
     # infinite loop to show pre-main menu. Allows user to login, register or
