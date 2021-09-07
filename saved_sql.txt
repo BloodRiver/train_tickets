@@ -1,0 +1,20 @@
+-- These SQL queries are tested and give expected output. They will be used for query in the program later on.
+
+-- Train ID, Username, Train Type, Weekday, Arrival Time, Departure Time
+
+SELECT 
+	`tickets`.`id`,
+	`user`.`username`,
+	`trains`.`train_type`,
+	`trains`.`weekday`,
+	`trains`.`arrival_time`,
+	`trains`.`departure_time`
+FROM
+	`tickets`,
+	`user`,
+	`trains`
+WHERE
+	`user`.`id` = `tickets`.`user_id`
+AND
+	`trains`.`id` = `tickets`.`train_id`
+AND `user`.`id` = 1

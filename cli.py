@@ -1,6 +1,7 @@
 import hashlib
 import csv
 import os
+import database as mydb
 
 
 # constants to use as list indexes for `add_train` and `edit_train`
@@ -20,8 +21,8 @@ WEEKDAYS = ("sunday", "monday", "tuesday", "wednesday", "friday",
             "saturday")
 
 
-# Admin name is Sajeed and password is admin@123 though an admin account can
-# be easily created from the users.csv
+# Admin name is Sajeed and password is test though an admin account can
+# be easily created by modifying users.csv
 
 
 def create_database_files_if_non_existent() -> None:
@@ -31,47 +32,10 @@ def create_database_files_if_non_existent() -> None:
     database files and avoid errors.
     '''
 
-    dirs = os.listdir('.')  # fetch a list of files and directories
-
-    # database_files = {'filename.csv': 2-d tuple for csv file headers}
-
-    database_files = {
-        'trains.csv': (
-            ('Train Number', 'Number of Coaches', 'Number of Seats',
-             'Weekday', 'Train Arrival Time', 'Train Departure Time'
-             ),
-        ),
-        'users.csv': (
-            ('Username', 'Password', 'Admin'),
-        ),
-        'tickets.csv': (
-            ('Username', "Train Number"),
-        )
-    }
-
-    for filename in database_files:
-        '''
-        For each filename take from the keys of the dictionary
-        `database_files` loop the following code:
-        '''
-
-        if filename not in dirs:
-
-            '''
-            If the filename does not exist in the list of files and
-            directories, create a new file with `filename`
-            (example: trains.csv) and initialize the files with
-            corresponding headers as defined in the `database_files`
-            dictionary
-            '''
-
-            data = database_files[filename]
-            with open(filename, 'w') as csv_file:
-                writer = csv.writer(csv_file)
-                writer.writerows(data)
+    mydb.create_db_if_not_exists()
 
 
-def get_data_from_csv(filename: str) -> list:
+def get_data_from_db(filename: str) -> list:
     '''
     Reads `filename` and returns a 2-D list containing all headers and records
     from the given csv file.
@@ -142,7 +106,7 @@ def login() -> tuple:
 
     pwd_hash = hashlib.sha256(pwd.encode()).hexdigest()
 
-    users = get_data_from_csv("users.csv")
+    users = get_data_from_db("users.csv")
 
     # by looping through each user, check to see if username
     # matches any existing user account
@@ -395,7 +359,7 @@ def view_train_data(user: dict) -> bool:
     This is a main menu function so if it returns False, it will indicate
     that the user has logged out.
     '''
-    all_trains = get_data_from_csv("trains.csv")
+    all_trains = get_data_from_db("trains.csv")
 
     # if trains.csv file does not exist or if the file is empty or contains
     # only the header row
@@ -448,7 +412,7 @@ def add_train_data(user: dict) -> bool:
     # show the user a list of trains existing in the database
     view_train_data(user)
 
-    all_trains = get_data_from_csv('trains.csv')
+    all_trains = get_data_from_db('trains.csv')
 
     # this variable will be used to auto-increment the serial number of the
     # new train as it is saved in the database.
@@ -648,7 +612,7 @@ def edit_train_data(user: dict) -> bool:
     the user has logged out.
     '''
 
-    all_trains = get_data_from_csv('trains.csv')
+    all_trains = get_data_from_db('trains.csv')
 
     # display a list of existing trains
     view_train_data(user)
@@ -832,7 +796,7 @@ def delete_train_data(user: dict) -> bool:
     Allows an admin to delete train data from the csv database
     '''
 
-    all_trains = get_data_from_csv('trains.csv')
+    all_trains = get_data_from_db('trains.csv')
     num_trains = len(all_trains) - 1
 
     view_train_data(user)
@@ -890,7 +854,7 @@ def purchase_tickets(user: dict) -> bool:
     chosen by user
     '''
 
-    all_trains = get_data_from_csv("trains.csv")
+    all_trains = get_data_from_db("trains.csv")
     while True:  # infinite loop keeps looping until user enters -1
         view_train_data(user)  # display a list of existing trains
         while True:
@@ -960,8 +924,8 @@ def get_ticket_data(name: str = '') -> list:
     then this function returns ticket data for all users.
     '''
 
-    all_tickets = get_data_from_csv('tickets.csv')
-    all_trains = get_data_from_csv('trains.csv')
+    all_tickets = get_data_from_db('tickets.csv')
+    all_trains = get_data_from_db('trains.csv')
     user_tickets = [['Username', 'Train Number', 'Weekday',
                      'Train Arrival Time', 'Train Departure Time']]
 
@@ -1075,7 +1039,7 @@ def cancel_booking(user: dict) -> bool:
     Remove entry from tickets.csv
     '''
     view_ticket_bookings(user)
-    all_tickets = get_data_from_csv('tickets.csv')
+    all_tickets = get_data_from_db('tickets.csv')
     current_user_tickets = get_ticket_data(user['name'])
 
     if len(all_tickets):
