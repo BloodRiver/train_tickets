@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS `tickets` (
 """
 
 
-def create_db_if_not_exists():
-    db = sql.connect(os.path.join(settings.BASE_DIR, "db2.sqlite3"))
+def create_db_if_not_exists(db_name: str = "db2.sqlite3"):
+    db = sql.connect(os.path.join(settings.BASE_DIR, db_name))
     cursor = db.cursor()
 
     queries = [
@@ -110,21 +110,38 @@ def create_db_if_not_exists():
     db.close()
 
 
-def sql_query(query: str) -> list:
-    db = sql.connect(os.path.join(settings.BASE_DIR, 'db2.sqlite3'))
+def sql_query(query: str, db_name: str = 'db2.sqlite3') -> list:
+    db = sql.connect(os.path.join(settings.BASE_DIR, db_name))
     cursor = db.cursor()
-    cursor.execute(query)
 
-    results = cursor.fetchall()
-    db.commit()
-    cursor.close()
-    db.close()
+    try:
+        cursor.execute(query)
+    except sql.Warning:
+        results = "err"
+
+    else:
+        results = cursor.fetchall()
+        db.commit()
+        cursor.close()
+        db.close()
 
     return results
 
 
 if __name__ == "__main__":
-    create_db_if_not_exists()
+    create_db_if_not_exists('test_db.sqlite3')
     print("Database initialized.")
+    print()
 
-    print(sql_query("SELECT * FROM `user`"))
+    while True:
+        query = input("Enter your query (-1 to exit): ")
+
+        if query == "-1":
+            break
+        else:
+            print(query)
+            if (input("Are you sure you wish to execute this query? (y/n): ")
+                    == "y"):
+                print(sql_query(query))
+
+    print("Program closed.")
