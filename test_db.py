@@ -3,10 +3,10 @@ import database as db
 import os
 # from pprint import pprint
 
-# write tests for fetching data from database. Test against SQL injection.
-# write tests for inserting data to database. Test against SQL injection.
-# write tests for updating data in database. Test against SQL injection.
-# write tests for deleting data from database. Test against SQL injection.
+# write tests for fetching data from database. Test against SQL injection.(ok)
+# write tests for inserting data to database. Test against SQL injection. (ok)
+# write tests for updating data in database. Test against SQL injection.  (ok)
+# write tests for deleting data from database. Test against SQL injection.(ok)
 TEST_DB = 'test_db.sqlite3'
 
 
