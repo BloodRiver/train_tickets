@@ -1,6 +1,8 @@
--- These SQL queries are tested and give expected output. They will be used for query in the program later on.
+-- These SQL queries are tested and give expected output.
+-- They will be used for query in the program later on.
 
--- Train ID, Username, Train Type, Weekday, Arrival Time, Departure Time
+-- Train ID, Username, Train Type, Weekday, Arrival Time,
+-- Departure Time
 
 SELECT 
 	`tickets`.`id`,
@@ -17,4 +19,6 @@ WHERE
 	`user`.`id` = `tickets`.`user_id`
 AND
 	`trains`.`id` = `tickets`.`train_id`
-AND `user`.`id` = 1
+AND `user`.`id` = 1;
+
+SELECT name FROM pragma_table_info('user')
